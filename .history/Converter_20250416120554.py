@@ -78,10 +78,7 @@ def actualizar_imagen_mapa(lat_centro, lon_centro, zoom_start, ruta_kml):
     
     placemarks = leer_kml(ruta_kml)
     for placemark in placemarks:
-        if placemark['tipo'] == 'Point':
-            mapa_tkinter.set_marker(placemark['lat'], placemark['lon'], text=placemark['nombre'])
-        elif placemark['tipo'] in ['LineString', 'Polygon']:
-            mapa_tkinter.set_path(placemark['puntos'])
+        mapa_tkinter.set_marker(placemark[0], placemark[1], text=placemark[2])
     
     mapa_tkinter.grid(row=0, column=0, columnspan=3, sticky="nsew")
 
@@ -98,7 +95,7 @@ def procesar_archivo():
           
         root, obtener_elevacion_valor=parseo(ruta_archivo_kml, obtener_elevacion)
         encontrar_placemark(root)
-        doc, coords, coords_dec, layers, lat_centro, lon_centro, radio, placemark= convierte(root, obtener_elevacion_valor)
+        doc, coords, coords_dec, layers, lat_centro, lon_centro, radio= convierte(root, obtener_elevacion_valor)
         zoom_start = get_zoom_level(radio)
         actualizar_imagen_mapa(lat_centro, lon_centro, zoom_start, ruta_archivo_kml)        
         crear_dxf(doc, ruta_archivo_kml, coords, layers, coords_dec)

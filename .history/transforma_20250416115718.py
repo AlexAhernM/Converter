@@ -90,7 +90,7 @@ def procesar_placemark(placemark, obtener_elevacion_valor, coords, layers, coord
     elif coord is not None:
         utm_points, coords, coords_dec, layers = obtener_coordenadas(coord, layer_name, obtener_elevacion_valor, coords, layers, coords_dec)
 
-    return utm_points, coords, coords_dec, layers, placemark
+    return utm_points, coords, coords_dec, layers
 
 
 def convierte(root, obtener_elevacion_valor):
@@ -102,7 +102,7 @@ def convierte(root, obtener_elevacion_valor):
     layer_names = []
 
     for placemark in encontrar_placemark(root):
-        utm_points, coords, coords_dec, layers, placemark = procesar_placemark(placemark, obtener_elevacion_valor, coords, layers, coords_dec)
+        utm_points, coords, coords_dec, layers = procesar_placemark(placemark, obtener_elevacion_valor, coords, layers, coords_dec)
         utm_points_list.append(utm_points)
         layer_names.append(placemark.find('{http://www.opengis.net/kml/2.2}name').text)
 
@@ -117,41 +117,57 @@ def convierte(root, obtener_elevacion_valor):
 
     for utm_points, layer_name in zip(utm_points_list, layer_names):
         agregar_polilinea(utm_points, layer_name, doc, radio)
-           
-    return doc, coords, coords_dec, layers, lat_centro, lon_centro, radio, placemark
+
+    return doc, coords, coords_dec, layers, lat_centro, lon_centro, radio
 
 def leer_kml(ruta_kml):
     tree = ET.parse(ruta_kml)
     root = tree.getroot()
     placemarks = []
+    styles = {}
+    
+    # Parsear estilos
+    for style in root.findall('.//{http://www.opengis.net/kml/2.2}Style'):
+        style_id = style.attrib['id']
+        styles[style_id] = {}
+        
+        # Parsear estilo de icono
+        icon_style = style.find('{http://www.opengis.net/kml/2.2}IconStyle')
+        if icon_style is not None:
+            icon_href = icon_style.find('{http://www.opengis.net/kml/2.2}Icon/{http://www.opengis.net/kml/2.2}href')
+            if icon_href is not None:
+                styles[style_id]['icon'] = icon_href.text
+        
+        # Parsear estilo de línea
+        line_style = style.find('{http://www.opengis.net/kml/2.2}LineStyle')
+        if line_style is not None:
+            color = line_style.find('{http://www.opengis.net/kml/2.2}color')
+            if color is not None:
+                styles[style_id]['line_color'] = color.text
+            width = line_style.find('{http://www.opengis.net/kml/2.2}width')
+            if width is not None:
+                styles[style_id]['line_width'] = width.text
+    
+    # Parsear placemarks
     for placemark in root.findall('.//{http://www.opengis.net/kml/2.2}Placemark'):
         nombre = placemark.find('{http://www.opengis.net/kml/2.2}name').text
-        ls = placemark.find('{http://www.opengis.net/kml/2.2}LineString')
-        py = placemark.find('{http://www.opengis.net/kml/2.2}Polygon')
-        pt = placemark.find('{http://www.opengis.net/kml/2.2}Point')
+        coordenadas = placemark.find('.//{http://www.opengis.net/kml/2.2}coordinates').text.strip()
+        coords = coordenadas.split()
+        style_url = placemark.find('{http://www.opengis.net/kml/2.2}styleUrl')
+        style_id = None
+        if style_url is not None:
+            style_id = style_url.text.lstrip('#')
         
-        if ls is not None:
-            coordenadas = ls.find('{http://www.opengis.net/kml/2.2}coordinates').text.strip()
-            coords = coordenadas.split()
-            puntos = [(float(coord.split(',')[1]), float(coord.split(',')[0])) for coord in coords]
-            placemarks.append({'tipo': 'LineString', 'nombre': nombre, 'puntos': puntos})
-        elif py is not None:
-            outer_boundary = py.find('{http://www.opengis.net/kml/2.2}outerBoundaryIs')
-            if outer_boundary is not None:
-                linear_ring = outer_boundary.find('{http://www.opengis.net/kml/2.2}LinearRing')
-                if linear_ring is not None:
-                    coordenadas = linear_ring.find('{http://www.opengis.net/kml/2.2}coordinates').text.strip()
-                    coords = coordenadas.split()
-                    puntos = [(float(coord.split(',')[1]), float(coord.split(',')[0])) for coord in coords]
-                    placemarks.append({'tipo': 'Polygon', 'nombre': nombre, 'puntos': puntos})
-        elif pt is not None:
-            coordenadas = pt.find('{http://www.opengis.net/kml/2.2}coordinates').text.strip()
-            lon, lat, *_ = coordenadas.split(',')
-            placemarks.append({'tipo': 'Point', 'nombre': nombre, 'lat': float(lat), 'lon': float(lon)})
+        for coord in coords:
+            lon, lat, *_ = coord.split(',')
+            placemarks.append({
+                'lat': float(lat),
+                'lon': float(lon),
+                'text': nombre,
+                'style': styles.get(style_id)
+            })
     
     return placemarks
-
-
 
 def procesar_multigeometrias(geoms, layer_name, obtener_elevacion_valor, coords, layers, coords_dec):
     utm_points_total = []
@@ -178,6 +194,9 @@ def procesar_multigeometrias(geoms, layer_name, obtener_elevacion_valor, coords,
             coords_dec_total.extend(coords_dec)
     
     return utm_points_total, coords_total, coords_dec_total, layers_total
+
+
+
 
 
 def obtener_maximos_minimos(coords, coords_dec):

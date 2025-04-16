@@ -58,9 +58,7 @@ def parseo(ruta_archivo_klm, obtener_elevacion):
     return root, obtener_elevacion_valor
     
 def encontrar_placemark(root):
-    placemark  = root.findall('.//{http://www.opengis.net/kml/2.2}Placemark')
-    
-    return placemark
+    return root.findall('.//{http://www.opengis.net/kml/2.2}Placemark')
 
 def procesar_placemark(placemark, obtener_elevacion_valor, coords, layers, coords_dec):
     name_element = placemark.find('{http://www.opengis.net/kml/2.2}name')
@@ -90,10 +88,10 @@ def procesar_placemark(placemark, obtener_elevacion_valor, coords, layers, coord
     elif coord is not None:
         utm_points, coords, coords_dec, layers = obtener_coordenadas(coord, layer_name, obtener_elevacion_valor, coords, layers, coords_dec)
 
-    return utm_points, coords, coords_dec, layers, placemark
+    return utm_points, coords, coords_dec, layers
 
 
-def convierte(root, obtener_elevacion_valor):
+def convierta(root, obtener_elevacion_valor):
     doc = ezdxf.new('R2013')
     coords = []
     layers = []
@@ -102,7 +100,7 @@ def convierte(root, obtener_elevacion_valor):
     layer_names = []
 
     for placemark in encontrar_placemark(root):
-        utm_points, coords, coords_dec, layers, placemark = procesar_placemark(placemark, obtener_elevacion_valor, coords, layers, coords_dec)
+        utm_points, coords, coords_dec, layers = procesar_placemark(placemark, obtener_elevacion_valor, coords, layers, coords_dec)
         utm_points_list.append(utm_points)
         layer_names.append(placemark.find('{http://www.opengis.net/kml/2.2}name').text)
 
@@ -117,39 +115,8 @@ def convierte(root, obtener_elevacion_valor):
 
     for utm_points, layer_name in zip(utm_points_list, layer_names):
         agregar_polilinea(utm_points, layer_name, doc, radio)
-           
-    return doc, coords, coords_dec, layers, lat_centro, lon_centro, radio, placemark
 
-def leer_kml(ruta_kml):
-    tree = ET.parse(ruta_kml)
-    root = tree.getroot()
-    placemarks = []
-    for placemark in root.findall('.//{http://www.opengis.net/kml/2.2}Placemark'):
-        nombre = placemark.find('{http://www.opengis.net/kml/2.2}name').text
-        ls = placemark.find('{http://www.opengis.net/kml/2.2}LineString')
-        py = placemark.find('{http://www.opengis.net/kml/2.2}Polygon')
-        pt = placemark.find('{http://www.opengis.net/kml/2.2}Point')
-        
-        if ls is not None:
-            coordenadas = ls.find('{http://www.opengis.net/kml/2.2}coordinates').text.strip()
-            coords = coordenadas.split()
-            puntos = [(float(coord.split(',')[1]), float(coord.split(',')[0])) for coord in coords]
-            placemarks.append({'tipo': 'LineString', 'nombre': nombre, 'puntos': puntos})
-        elif py is not None:
-            outer_boundary = py.find('{http://www.opengis.net/kml/2.2}outerBoundaryIs')
-            if outer_boundary is not None:
-                linear_ring = outer_boundary.find('{http://www.opengis.net/kml/2.2}LinearRing')
-                if linear_ring is not None:
-                    coordenadas = linear_ring.find('{http://www.opengis.net/kml/2.2}coordinates').text.strip()
-                    coords = coordenadas.split()
-                    puntos = [(float(coord.split(',')[1]), float(coord.split(',')[0])) for coord in coords]
-                    placemarks.append({'tipo': 'Polygon', 'nombre': nombre, 'puntos': puntos})
-        elif pt is not None:
-            coordenadas = pt.find('{http://www.opengis.net/kml/2.2}coordinates').text.strip()
-            lon, lat, *_ = coordenadas.split(',')
-            placemarks.append({'tipo': 'Point', 'nombre': nombre, 'lat': float(lat), 'lon': float(lon)})
-    
-    return placemarks
+    return doc, coords, coords_dec, layers, lat_centro, lon_centro, radio
 
 
 
@@ -178,6 +145,18 @@ def procesar_multigeometrias(geoms, layer_name, obtener_elevacion_valor, coords,
             coords_dec_total.extend(coords_dec)
     
     return utm_points_total, coords_total, coords_dec_total, layers_total
+
+def leer_kml(ruta_kml):
+    tree = ET.parse(ruta_kml)
+    root = tree.getroot()
+    placemarks = []
+    for placemark in root.findall('.//{http://www.opengis.net/kml/2.2}Placemark'):
+        nombre = placemark.find('{http://www.opengis.net/kml/2.2}name').text
+        coordenadas = placemark.find('.//{http://www.opengis.net/kml/2.2}coordinates').text
+        lon, lat, _ = coordenadas.split(',')
+        placemarks.append((float(lat), float(lon), nombre))
+    return placemarks
+
 
 
 def obtener_maximos_minimos(coords, coords_dec):

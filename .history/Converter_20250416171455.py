@@ -68,7 +68,7 @@ obtener_elevacion = tk.BooleanVar()
 
 # Mostrar la imagen del mapa en la ventana
 
-def actualizar_imagen_mapa(lat_centro, lon_centro, zoom_start, ruta_kml):
+def actualizar_imagen_mapa(lat_centro, lon_centro, zoom_start, ruta_kml, placemark):
     for widget in frame_mapa.winfo_children():
         widget.destroy()
 
@@ -81,7 +81,7 @@ def actualizar_imagen_mapa(lat_centro, lon_centro, zoom_start, ruta_kml):
         if placemark['tipo'] == 'Point':
             mapa_tkinter.set_marker(placemark['lat'], placemark['lon'], text=placemark['nombre'])
         elif placemark['tipo'] in ['LineString', 'Polygon']:
-            mapa_tkinter.set_path(placemark['puntos'])
+            mapa_tkinter.set_path(placemark['puntos'], text=placemark['nombre'])
     
     mapa_tkinter.grid(row=0, column=0, columnspan=3, sticky="nsew")
 
@@ -100,7 +100,7 @@ def procesar_archivo():
         encontrar_placemark(root)
         doc, coords, coords_dec, layers, lat_centro, lon_centro, radio, placemark= convierte(root, obtener_elevacion_valor)
         zoom_start = get_zoom_level(radio)
-        actualizar_imagen_mapa(lat_centro, lon_centro, zoom_start, ruta_archivo_kml)        
+        actualizar_imagen_mapa(lat_centro, lon_centro, zoom_start, ruta_archivo_kml, placemark)        
         crear_dxf(doc, ruta_archivo_kml, coords, layers, coords_dec)
         boton_transformar_archivo.config(state=tk.DISABLED)
     else:

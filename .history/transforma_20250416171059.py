@@ -117,8 +117,8 @@ def convierte(root, obtener_elevacion_valor):
 
     for utm_points, layer_name in zip(utm_points_list, layer_names):
         agregar_polilinea(utm_points, layer_name, doc, radio)
-           
-    return doc, coords, coords_dec, layers, lat_centro, lon_centro, radio, placemark
+
+    return doc, coords, coords_dec, layers, lat_centro, lon_centro, radio
 
 def leer_kml(ruta_kml):
     tree = ET.parse(ruta_kml)

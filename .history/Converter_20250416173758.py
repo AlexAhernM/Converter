@@ -100,7 +100,7 @@ def procesar_archivo():
         encontrar_placemark(root)
         doc, coords, coords_dec, layers, lat_centro, lon_centro, radio, placemark= convierte(root, obtener_elevacion_valor)
         zoom_start = get_zoom_level(radio)
-        actualizar_imagen_mapa(lat_centro, lon_centro, zoom_start, ruta_archivo_kml)        
+        actualizar_imagen_mapa(lat_centro, lon_centro, zoom_start, ruta_archivo_kml, placemark)        
         crear_dxf(doc, ruta_archivo_kml, coords, layers, coords_dec)
         boton_transformar_archivo.config(state=tk.DISABLED)
     else:

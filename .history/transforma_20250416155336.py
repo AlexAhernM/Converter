@@ -102,7 +102,7 @@ def convierte(root, obtener_elevacion_valor):
     layer_names = []
 
     for placemark in encontrar_placemark(root):
-        utm_points, coords, coords_dec, layers, placemark = procesar_placemark(placemark, obtener_elevacion_valor, coords, layers, coords_dec)
+        utm_points, coords, coords_dec, layers = procesar_placemark(placemark, obtener_elevacion_valor, coords, layers, coords_dec)
         utm_points_list.append(utm_points)
         layer_names.append(placemark.find('{http://www.opengis.net/kml/2.2}name').text)
 
@@ -117,8 +117,8 @@ def convierte(root, obtener_elevacion_valor):
 
     for utm_points, layer_name in zip(utm_points_list, layer_names):
         agregar_polilinea(utm_points, layer_name, doc, radio)
-           
-    return doc, coords, coords_dec, layers, lat_centro, lon_centro, radio, placemark
+
+    return doc, coords, coords_dec, layers, lat_centro, lon_centro, radio
 
 def leer_kml(ruta_kml):
     tree = ET.parse(ruta_kml)
