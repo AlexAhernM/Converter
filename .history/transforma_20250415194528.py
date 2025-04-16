@@ -58,7 +58,31 @@ def parseo(ruta_archivo_klm, obtener_elevacion):
     return root, obtener_elevacion_valor
     
 
-
+def procesar_multigeometrias(geoms, layer_name, obtener_elevacion_valor, coords, layers, coords_dec):
+    utm_points_total = []
+    coords_total = coords
+    coords_dec_total = coords_dec
+    layers_total = layers
+    
+    for geom in geoms:
+        if geom.tag == '{http://www.opengis.net/kml/2.2}Polygon':
+            outer_boundary = geom.find('{http://www.opengis.net/kml/2.2}outerBoundaryIs')
+            if outer_boundary is not None:
+                linear_ring = outer_boundary.find('{http://www.opengis.net/kml/2.2}LinearRing')
+                if linear_ring is not None:
+                    coord = linear_ring.find('{http://www.opengis.net/kml/2.2}coordinates')
+                    utm_points, coords, coords_dec, layers = obtener_coordenadas(coord, layer_name, obtener_elevacion_valor, coords, layers, coords_dec)
+                    utm_points_total.extend(utm_points)
+                    coords_total.extend(coords)
+                    coords_dec_total.extend(coords_dec)
+        elif geom.tag in ['{http://www.opengis.net/kml/2.2}LineString', '{http://www.opengis.net/kml/2.2}Point']:
+            coord = geom.find('{http://www.opengis.net/kml/2.2}coordinates')
+            utm_points, coords, coords_dec, layers = obtener_coordenadas(coord, layer_name, obtener_elevacion_valor, coords, layers, coords_dec)
+            utm_points_total.extend(utm_points)
+            coords_total.extend(coords)
+            coords_dec_total.extend(coords_dec)
+    
+    return utm_points_total, coords_total, coords_dec_total, layers_total
     
 
 def convierte(root,  obtener_elevacion_valor):
@@ -113,40 +137,13 @@ def convierte(root,  obtener_elevacion_valor):
     lat_centro = resultados['lat_centro']
     lon_centro = resultados['lon_centro']
     radio = max(abs(lat_max - lat_min), abs(lon_max - lon_min))
-    print (f'radio del area = {radio} metros ')
+    
     # Agregar las polilíneas después de calcular radio
     for utm_points, layer_name in zip(utm_points_list, layer_names):
         agregar_polilinea(utm_points, layer_name, doc, radio)
     
     return doc, coords, coords_dec, layers, lat_centro, lon_centro, radio
 
-
-
-def procesar_multigeometrias(geoms, layer_name, obtener_elevacion_valor, coords, layers, coords_dec):
-    utm_points_total = []
-    coords_total = coords
-    coords_dec_total = coords_dec
-    layers_total = layers
-    
-    for geom in geoms:
-        if geom.tag == '{http://www.opengis.net/kml/2.2}Polygon':
-            outer_boundary = geom.find('{http://www.opengis.net/kml/2.2}outerBoundaryIs')
-            if outer_boundary is not None:
-                linear_ring = outer_boundary.find('{http://www.opengis.net/kml/2.2}LinearRing')
-                if linear_ring is not None:
-                    coord = linear_ring.find('{http://www.opengis.net/kml/2.2}coordinates')
-                    utm_points, coords, coords_dec, layers = obtener_coordenadas(coord, layer_name, obtener_elevacion_valor, coords, layers, coords_dec)
-                    utm_points_total.extend(utm_points)
-                    coords_total.extend(coords)
-                    coords_dec_total.extend(coords_dec)
-        elif geom.tag in ['{http://www.opengis.net/kml/2.2}LineString', '{http://www.opengis.net/kml/2.2}Point']:
-            coord = geom.find('{http://www.opengis.net/kml/2.2}coordinates')
-            utm_points, coords, coords_dec, layers = obtener_coordenadas(coord, layer_name, obtener_elevacion_valor, coords, layers, coords_dec)
-            utm_points_total.extend(utm_points)
-            coords_total.extend(coords)
-            coords_dec_total.extend(coords_dec)
-    
-    return utm_points_total, coords_total, coords_dec_total, layers_total
 
 def obtener_maximos_minimos(coords, coords_dec):
         
@@ -212,6 +209,7 @@ def obtener_altitud_api(lat, lon):
     else:
         return 0
 
+import math
 
 def agregar_polilinea(utm_points, layer_name, doc, radio):
     """
@@ -246,15 +244,18 @@ def agregar_polilinea(utm_points, layer_name, doc, radio):
             y = utm_points[0][1] + radius * math.sin(math.radians(angle))
             circle_points.append((x, y))
             
+        # Agregar el primer punto al final para cerrar el círculo
+        circle_points.append(circle_points[0])
         # Agregar el círculo al documento DXF
         msp.add_polyline2d(circle_points, dxfattribs={'layer': layer_name, 'color': 7})
         
         # Crear un hatch (relleno) para rellenar el círculo
         hatch = msp.add_hatch(color=1)  # Color negro
-        hatch.paths.add_polyline_path(circle_points + [circle_points[0]])  # Agregar el primer punto al final para cerrar el hatch
+        hatch.paths.add_polyline_path(circle_points)
         
         # Agregar el nombre de la capa encima del círculo
-        msp.add_mtext(layer_name, dxfattribs={'layer': layer_name, 'color': 7, 'insert': (utm_points[0][0], utm_points[0][1] + radius + 5), 'char_height': 30})
+        msp.add_mtext(layer_name, dxfattribs={'layer': layer_name, 'color': 7, 'insert': (utm_points[0][0], utm_points[0][1] + radius + 5), 'height': 30})
+        
         
     else:
         # Agregar la polilínea al documento DXF
@@ -311,20 +312,14 @@ def crear_dxf(doc, ruta_archivo_kml, coords, layers, coords_dec):
     
     # Abrir el archivo DXF
     with fiona.open(ruta_archivo_salida_dxf, 'r', driver='DXF') as src:
-        # Crear un nuevo Shapefile para líneas
+    # Crear un nuevo Shapefile para líneas
         with fiona.open(ruta_archivo_salida_shp, 'w', driver='ESRI Shapefile', crs=src.crs, schema={'geometry': 'LineString', 'properties': src.schema['properties']}) as dst_lineas:
             # Agregar los datos del archivo DXF
             for feature in src:
                 if feature.geometry.type == 'Polygon':
-                    new_feature = {
-                        'geometry': {
-                            'type': 'LineString',
-                            'coordinates': feature.geometry.coordinates[0]
-                        },
-                        'properties': feature.properties
-                    }
-                    dst_lineas.write(new_feature)
-                elif feature.geometry.type == 'LineString':
+                    feature.geometry.coordinates = [feature.geometry.coordinates[0]]
+                    feature.geometry.type = 'LineString'
+                if feature.geometry.type == 'LineString':
                     dst_lineas.write(feature)
 
     print(f"Archivo SHP guardado correctamente en {ruta_archivo_salida_shp}")

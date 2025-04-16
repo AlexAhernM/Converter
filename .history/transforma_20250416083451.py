@@ -58,7 +58,31 @@ def parseo(ruta_archivo_klm, obtener_elevacion):
     return root, obtener_elevacion_valor
     
 
-
+def procesar_multigeometrias(geoms, layer_name, obtener_elevacion_valor, coords, layers, coords_dec):
+    utm_points_total = []
+    coords_total = coords
+    coords_dec_total = coords_dec
+    layers_total = layers
+    
+    for geom in geoms:
+        if geom.tag == '{http://www.opengis.net/kml/2.2}Polygon':
+            outer_boundary = geom.find('{http://www.opengis.net/kml/2.2}outerBoundaryIs')
+            if outer_boundary is not None:
+                linear_ring = outer_boundary.find('{http://www.opengis.net/kml/2.2}LinearRing')
+                if linear_ring is not None:
+                    coord = linear_ring.find('{http://www.opengis.net/kml/2.2}coordinates')
+                    utm_points, coords, coords_dec, layers = obtener_coordenadas(coord, layer_name, obtener_elevacion_valor, coords, layers, coords_dec)
+                    utm_points_total.extend(utm_points)
+                    coords_total.extend(coords)
+                    coords_dec_total.extend(coords_dec)
+        elif geom.tag in ['{http://www.opengis.net/kml/2.2}LineString', '{http://www.opengis.net/kml/2.2}Point']:
+            coord = geom.find('{http://www.opengis.net/kml/2.2}coordinates')
+            utm_points, coords, coords_dec, layers = obtener_coordenadas(coord, layer_name, obtener_elevacion_valor, coords, layers, coords_dec)
+            utm_points_total.extend(utm_points)
+            coords_total.extend(coords)
+            coords_dec_total.extend(coords_dec)
+    
+    return utm_points_total, coords_total, coords_dec_total, layers_total
     
 
 def convierte(root,  obtener_elevacion_valor):
@@ -120,33 +144,6 @@ def convierte(root,  obtener_elevacion_valor):
     
     return doc, coords, coords_dec, layers, lat_centro, lon_centro, radio
 
-
-
-def procesar_multigeometrias(geoms, layer_name, obtener_elevacion_valor, coords, layers, coords_dec):
-    utm_points_total = []
-    coords_total = coords
-    coords_dec_total = coords_dec
-    layers_total = layers
-    
-    for geom in geoms:
-        if geom.tag == '{http://www.opengis.net/kml/2.2}Polygon':
-            outer_boundary = geom.find('{http://www.opengis.net/kml/2.2}outerBoundaryIs')
-            if outer_boundary is not None:
-                linear_ring = outer_boundary.find('{http://www.opengis.net/kml/2.2}LinearRing')
-                if linear_ring is not None:
-                    coord = linear_ring.find('{http://www.opengis.net/kml/2.2}coordinates')
-                    utm_points, coords, coords_dec, layers = obtener_coordenadas(coord, layer_name, obtener_elevacion_valor, coords, layers, coords_dec)
-                    utm_points_total.extend(utm_points)
-                    coords_total.extend(coords)
-                    coords_dec_total.extend(coords_dec)
-        elif geom.tag in ['{http://www.opengis.net/kml/2.2}LineString', '{http://www.opengis.net/kml/2.2}Point']:
-            coord = geom.find('{http://www.opengis.net/kml/2.2}coordinates')
-            utm_points, coords, coords_dec, layers = obtener_coordenadas(coord, layer_name, obtener_elevacion_valor, coords, layers, coords_dec)
-            utm_points_total.extend(utm_points)
-            coords_total.extend(coords)
-            coords_dec_total.extend(coords_dec)
-    
-    return utm_points_total, coords_total, coords_dec_total, layers_total
 
 def obtener_maximos_minimos(coords, coords_dec):
         

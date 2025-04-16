@@ -90,7 +90,7 @@ def procesar_archivo():
     if ruta_archivo_kml:
           
         root, obtener_elevacion_valor=parseo(ruta_archivo_kml, obtener_elevacion)
-        doc, coords, coords_dec, layers, lat_centro, lon_centro, radio =  convierte (root,  obtener_elevacion_valor)
+        doc, layer_name, utm_points, coords, coords_dec, layers, lat_centro, lon_centro, radio =  convierte (root,  obtener_elevacion_valor)
 
         zoom_start = get_zoom_level(radio)
         actualizar_imagen_mapa(lat_centro, lon_centro, zoom_start)        

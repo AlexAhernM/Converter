@@ -4,7 +4,7 @@ import tkinter.ttk as ttk
 from tkinter import filedialog, ttk
 import time
 from tkintermapview import TkinterMapView
-from transforma import parseo, convierte, obtener_maximos_minimos, get_zoom_level,agregar_polilinea,  crear_dxf
+from transforma import parseo,  agregar_polilinea, crear_dxf
 import threading
 
 
@@ -43,6 +43,8 @@ def seleccionar_archivo_kml():
     return ruta_archivo_kml
        
 def mostrar_advertencia():
+    print("La función mostrar_advertencia se ha llamado")
+    print("Valor de obtener_elevacion:", obtener_elevacion.get())
     
     if obtener_elevacion.get():
         etiqueta_advertencia.config(text="Advertencia: Debe estar conectado a internet,  para proceso on-iine de obtención de elevación")
@@ -68,7 +70,7 @@ obtener_elevacion = tk.BooleanVar()
 
 # Mostrar la imagen del mapa en la ventana
 
-def actualizar_imagen_mapa(lat_centro, lon_centro, zoom_start):
+def actualizar_imagen_mapa(lat_centro, lon_centro, zoom_start, radio):
     for widget in frame_mapa.winfo_children():
         widget.destroy()
 
@@ -88,14 +90,9 @@ def procesar_archivo():
     ruta_archivo_kml = entrada_archivo_kml.get()
     print (ruta_archivo_kml)
     if ruta_archivo_kml:
-          
-        root, obtener_elevacion_valor=parseo(ruta_archivo_kml, obtener_elevacion)
-        doc, coords, coords_dec, layers, lat_centro, lon_centro, radio =  convierte (root,  obtener_elevacion_valor)
-
-        zoom_start = get_zoom_level(radio)
-        actualizar_imagen_mapa(lat_centro, lon_centro, zoom_start)        
-              
-         
+        
+        coords, coords_dec, lat_centro, lon_centro, zoom_start, radio, doc, layers=parseo(entrada_archivo_kml, obtener_elevacion)
+        actualizar_imagen_mapa(lat_centro, lon_centro, zoom_start, radio)
         crear_dxf(doc, ruta_archivo_kml, coords, layers, coords_dec)
         boton_transformar_archivo.config(state=tk.DISABLED)
     else:

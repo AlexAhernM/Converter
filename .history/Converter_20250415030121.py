@@ -4,7 +4,7 @@ import tkinter.ttk as ttk
 from tkinter import filedialog, ttk
 import time
 from tkintermapview import TkinterMapView
-from transforma import parseo, convierte, obtener_maximos_minimos, get_zoom_level,agregar_polilinea,  crear_dxf
+from transforma import parseo, convierte, obtener_maximos_minimos, get_zoom_level, agregar_polilinea, crear_dxf
 import threading
 
 
@@ -88,14 +88,29 @@ def procesar_archivo():
     ruta_archivo_kml = entrada_archivo_kml.get()
     print (ruta_archivo_kml)
     if ruta_archivo_kml:
-          
+        global radio   
         root, obtener_elevacion_valor=parseo(ruta_archivo_kml, obtener_elevacion)
-        doc, coords, coords_dec, layers, lat_centro, lon_centro, radio =  convierte (root,  obtener_elevacion_valor)
-
+        doc, layer_name, utm_points, coords, coords_dec, layers=  convierte (root,  obtener_elevacion_valor)
+        resultados = obtener_maximos_minimos(coords, coords_dec)
+            # Acceder a los resultados
+        lat_min = resultados['lat_min']
+        lat_max = resultados['lat_max']
+        lon_min = resultados['lon_min']
+        lon_max = resultados['lon_max']
+        lat_centro = resultados['lat_centro']
+        lon_centro = resultados['lon_centro']
+        
+        radio = max(abs(lat_max - lat_min), abs(lon_max - lon_min))
+        
         zoom_start = get_zoom_level(radio)
         actualizar_imagen_mapa(lat_centro, lon_centro, zoom_start)        
-              
-         
+        print (radio)           
+        print (f" convierte {layer_name}")
+        print(f"utm_points convierte tiene {len(utm_points)} elementos")
+        print(f"layers convierte tiene {len(layers)} elementos")       
+        
+        
+        
         crear_dxf(doc, ruta_archivo_kml, coords, layers, coords_dec)
         boton_transformar_archivo.config(state=tk.DISABLED)
     else:
