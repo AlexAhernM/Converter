@@ -90,8 +90,7 @@ def procesar_placemark(placemark, obtener_elevacion_valor, coords, layers, coord
     elif coord is not None:
         utm_points, coords, coords_dec, layers = obtener_coordenadas(coord, layer_name, obtener_elevacion_valor, coords, layers, coords_dec)
 
-    return utm_points, coords, coords_dec, layers, layer_name
-    
+    return utm_points, coords, coords_dec, layers, placemark
 
 
 def convierte(root, obtener_elevacion_valor):
@@ -104,10 +103,10 @@ def convierte(root, obtener_elevacion_valor):
 
     for placemark in encontrar_placemark(root):
         utm_points, coords, coords_dec, layers, layer_name = procesar_placemark(placemark, obtener_elevacion_valor, coords, layers, coords_dec)
-        print(type(layer_name))  # Debería imprimir <class 'str'>
+        print(type(layer_name))
         utm_points_list.append(utm_points)
         layer_names.append(layer_name)
-        
+
     resultados = obtener_maximos_minimos(coords, coords_dec)
     lat_min = resultados['lat_min']
     lat_max = resultados['lat_max']
@@ -127,11 +126,9 @@ def leer_kml(ruta_kml):
     tree = ET.parse(ruta_kml)
     root = tree.getroot()
     placemarks = []
-    
-   
-    #nombre = nombre.text if nombre is not None else 'Sin Nombre'    
+        
     for placemark in root.findall('.//{http://www.opengis.net/kml/2.2}Placemark'):
-        nombre = placemark.find('{http://www.opengis.net/kml/2.2}name').text
+        
         ls = placemark.find('{http://www.opengis.net/kml/2.2}LineString')
         py = placemark.find('{http://www.opengis.net/kml/2.2}Polygon')
         pt = placemark.find('{http://www.opengis.net/kml/2.2}Point')

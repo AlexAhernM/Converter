@@ -128,10 +128,10 @@ def leer_kml(ruta_kml):
     root = tree.getroot()
     placemarks = []
     
-   
+    nombre = placemark.find('{http://www.opengis.net/kml/2.2}name').text
     #nombre = nombre.text if nombre is not None else 'Sin Nombre'    
     for placemark in root.findall('.//{http://www.opengis.net/kml/2.2}Placemark'):
-        nombre = placemark.find('{http://www.opengis.net/kml/2.2}name').text
+        
         ls = placemark.find('{http://www.opengis.net/kml/2.2}LineString')
         py = placemark.find('{http://www.opengis.net/kml/2.2}Polygon')
         pt = placemark.find('{http://www.opengis.net/kml/2.2}Point')

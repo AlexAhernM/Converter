@@ -90,8 +90,7 @@ def procesar_placemark(placemark, obtener_elevacion_valor, coords, layers, coord
     elif coord is not None:
         utm_points, coords, coords_dec, layers = obtener_coordenadas(coord, layer_name, obtener_elevacion_valor, coords, layers, coords_dec)
 
-    return utm_points, coords, coords_dec, layers, layer_name
-    
+    return utm_points, coords, coords_dec, layers, placemark
 
 
 def convierte(root, obtener_elevacion_valor):
@@ -103,11 +102,10 @@ def convierte(root, obtener_elevacion_valor):
     layer_names = []
 
     for placemark in encontrar_placemark(root):
-        utm_points, coords, coords_dec, layers, layer_name = procesar_placemark(placemark, obtener_elevacion_valor, coords, layers, coords_dec)
-        print(type(layer_name))  # Debería imprimir <class 'str'>
+        utm_points, coords, coords_dec, layers, placemark = procesar_placemark(placemark, obtener_elevacion_valor, coords, layers, coords_dec)
         utm_points_list.append(utm_points)
-        layer_names.append(layer_name)
-        
+        layer_names.append(placemark.find('{http://www.opengis.net/kml/2.2}name').text)
+
     resultados = obtener_maximos_minimos(coords, coords_dec)
     lat_min = resultados['lat_min']
     lat_max = resultados['lat_max']
@@ -118,20 +116,22 @@ def convierte(root, obtener_elevacion_valor):
     radio = max(abs(lat_max - lat_min), abs(lon_max - lon_min))
 
     for utm_points, layer_name in zip(utm_points_list, layer_names):
-        print(type(layer_name))
-        agregar_polilinea(utm_points, layer_name, doc)
+        agregar_polilinea(utm_points, layer_name, doc, radio)
            
-    return doc, coords, coords_dec, layers, lat_centro, lon_centro, radio
+    return doc, coords, coords_dec, layers, lat_centro, lon_centro, radio, placemark
 
 def leer_kml(ruta_kml):
     tree = ET.parse(ruta_kml)
     root = tree.getroot()
     placemarks = []
-    
-   
-    #nombre = nombre.text if nombre is not None else 'Sin Nombre'    
+        
     for placemark in root.findall('.//{http://www.opengis.net/kml/2.2}Placemark'):
-        nombre = placemark.find('{http://www.opengis.net/kml/2.2}name').text
+        nombre = placemark.find('{http://www.opengis.net/kml/2.2}name')
+        nombre = nombre.text if nombre is not None else 'Sin Nombre'
+        if len(nombre) > 255:
+            nombre =nombre[255]
+        nombre =re.sub('[^a-zA-Z0-9_]', '_', nombre)
+        
         ls = placemark.find('{http://www.opengis.net/kml/2.2}LineString')
         py = placemark.find('{http://www.opengis.net/kml/2.2}Polygon')
         pt = placemark.find('{http://www.opengis.net/kml/2.2}Point')
@@ -251,7 +251,7 @@ def obtener_altitud_api(lat, lon):
         return 0
 
 
-def agregar_polilinea(utm_points, layer_name, doc):
+def agregar_polilinea(utm_points, layer_name, doc, radio):
     """
     Agrega una polilínea o un círculo a un documento DXF.
 
