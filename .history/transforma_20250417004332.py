@@ -1,13 +1,18 @@
 import tkinter as tk
 import xml.etree.ElementTree as ET
+
 import utm
+
 import re
 import math
 import ezdxf
 import requests
 
+
+
 obtener_elevacion_valor = tk.BooleanVar
-     
+
+        
 zoom_levels = {
     (0 , 50) :    20, 
     (50, 100) :   19,
@@ -26,7 +31,8 @@ zoom_levels = {
     (200001,500000):8,
     (1000001,2000000):6,
     (2000001,3000000):5,
-    (3000001, float('inf')): 4    
+    (3000001, float('inf')): 4
+     
 }
 
 def get_zoom_level(radio):
@@ -34,6 +40,8 @@ def get_zoom_level(radio):
                 if min_radio <= radio <= max_radio:
                     return zoom
             return 10  # valor por defecto
+        
+
 
 def parseo(ruta_archivo_klm, obtener_elevacion):
     obtener_elevacion_valor = obtener_elevacion.get()
@@ -83,6 +91,8 @@ def procesar_placemark(placemark, obtener_elevacion_valor, coords, layers, coord
 
     return utm_points, coords, coords_dec, layers, layer_name
     
+
+
 def convierte(root, obtener_elevacion_valor):
     doc = ezdxf.new('R2013')
     coords = []
@@ -110,6 +120,8 @@ def convierte(root, obtener_elevacion_valor):
            
     return doc, coords, coords_dec, layers, lat_centro, lon_centro, radio
 
+
+
 def procesar_multigeometrias(geoms, layer_name, obtener_elevacion_valor, coords, layers, coords_dec):
     utm_points_total = []
     coords_total = coords
@@ -136,6 +148,7 @@ def procesar_multigeometrias(geoms, layer_name, obtener_elevacion_valor, coords,
     
     return utm_points_total, coords_total, coords_dec_total, layers_total
 
+
 def obtener_maximos_minimos(coords, coords_dec):
         
     # Calcula el promedio de las coordenadas x e y
@@ -161,7 +174,8 @@ def obtener_maximos_minimos(coords, coords_dec):
 def obtener_coordenadas(coord, layer_name,  obtener_elevacion_valor,coords, layers, coords_dec):
                        
     utm_points = []
-    elevaciones_api = []  
+    elevaciones_api = []
+    
     
     if coord is not None:
         points = [c.split(',') for c in coord.text.split()]
@@ -182,6 +196,7 @@ def obtener_coordenadas(coord, layer_name,  obtener_elevacion_valor,coords, laye
                 #print("No se está obteniendo altitud de la API de Google Maps...")
                 utm_points.append((utm_point[0], utm_point[1], 0))
                 coords.append((utm_point[0], utm_point[1], 0))
+    
    
     return utm_points, coords, coords_dec, layers
 
@@ -195,6 +210,7 @@ def obtener_altitud_api(lat, lon):
         return round(datos["results"][0]["elevation"], 2)
     else:
         return 0
+
 
 def agregar_polilinea(utm_points, layer_name, doc):
     """

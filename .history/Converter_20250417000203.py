@@ -79,11 +79,11 @@ def actualizar_imagen_mapa(lat_centro, lon_centro, zoom_start, root, obtener_ele
 
     placemarks = encontrar_placemark(root)
     for placemark in placemarks:
-        _, _, coords_dec, _, layer_name = procesar_placemark(placemark, obtener_elevacion_valor, [], [], [])
-        if len(coords_dec) == 1:  # Point
-            mapa_tkinter.set_marker(coords_dec[0][0], coords_dec[0][1], text=layer_name)
+        utm_points, coords, coords_dec, layers, layer_name = procesar_placemark(placemark, obtener_elevacion_valor, [], [], [])
+        if len(utm_points) == 1:  # Point
+            mapa_tkinter.set_marker(utm_points[0][1], utm_points[0][0], text=layer_name)
         else:  # LineString o Polygon
-            puntos = [(point[0], point[1]) for point in coords_dec]
+            puntos = [(point[1], point[0]) for point in utm_points]
             mapa_tkinter.set_path(puntos)
 
     mapa_tkinter.grid(row=0, column=0, columnspan=3, sticky="nsew")

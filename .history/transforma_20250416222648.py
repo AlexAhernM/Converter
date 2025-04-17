@@ -1,13 +1,18 @@
 import tkinter as tk
 import xml.etree.ElementTree as ET
+
 import utm
+
 import re
 import math
 import ezdxf
 import requests
 
+
+
 obtener_elevacion_valor = tk.BooleanVar
-     
+
+        
 zoom_levels = {
     (0 , 50) :    20, 
     (50, 100) :   19,
@@ -26,7 +31,8 @@ zoom_levels = {
     (200001,500000):8,
     (1000001,2000000):6,
     (2000001,3000000):5,
-    (3000001, float('inf')): 4    
+    (3000001, float('inf')): 4
+     
 }
 
 def get_zoom_level(radio):
@@ -34,6 +40,8 @@ def get_zoom_level(radio):
                 if min_radio <= radio <= max_radio:
                     return zoom
             return 10  # valor por defecto
+        
+
 
 def parseo(ruta_archivo_klm, obtener_elevacion):
     obtener_elevacion_valor = obtener_elevacion.get()
@@ -83,6 +91,8 @@ def procesar_placemark(placemark, obtener_elevacion_valor, coords, layers, coord
 
     return utm_points, coords, coords_dec, layers, layer_name
     
+
+
 def convierte(root, obtener_elevacion_valor):
     doc = ezdxf.new('R2013')
     coords = []
@@ -93,6 +103,7 @@ def convierte(root, obtener_elevacion_valor):
 
     for placemark in encontrar_placemark(root):
         utm_points, coords, coords_dec, layers, layer_name = procesar_placemark(placemark, obtener_elevacion_valor, coords, layers, coords_dec)
+        print(type(layer_name))  # Debería imprimir <class 'str'>
         utm_points_list.append(utm_points)
         layer_names.append(layer_name)
         
@@ -106,9 +117,51 @@ def convierte(root, obtener_elevacion_valor):
     radio = max(abs(lat_max - lat_min), abs(lon_max - lon_min))
 
     for utm_points, layer_name in zip(utm_points_list, layer_names):
+        print(type(layer_name))
         agregar_polilinea(utm_points, layer_name, doc)
            
     return doc, coords, coords_dec, layers, lat_centro, lon_centro, radio
+
+def leer_kml(ruta_kml):
+    tree = ET.parse(ruta_kml)
+    root = tree.getroot()
+    placemarks = []
+    
+   
+    #nombre = nombre.text if nombre is not None else 'Sin Nombre'    
+    for placemark in root.findall('.//{http://www.opengis.net/kml/2.2}Placemark'):
+        nombre = placemark.find('{http://www.opengis.net/kml/2.2}name').text
+        ls = placemark.find('{http://www.opengis.net/kml/2.2}LineString')
+        py = placemark.find('{http://www.opengis.net/kml/2.2}Polygon')
+        pt = placemark.find('{http://www.opengis.net/kml/2.2}Point')
+        mg = placemark.find('{http://www.opengis.net/kml/2.2}MultiGeometry')
+        
+        if ls is not None:
+            coordenadas = ls.find('{http://www.opengis.net/kml/2.2}coordinates').text.strip()
+            coords = coordenadas.split()
+            puntos = [(float(coord.split(',')[1]), float(coord.split(',')[0])) for coord in coords]
+            placemarks.append({'tipo': 'LineString', 'nombre': nombre, 'puntos': puntos})
+        elif py is not None:
+            outer_boundary = py.find('{http://www.opengis.net/kml/2.2}outerBoundaryIs')
+            if outer_boundary is not None:
+                linear_ring = outer_boundary.find('{http://www.opengis.net/kml/2.2}LinearRing')
+                if linear_ring is not None:
+                    coordenadas = linear_ring.find('{http://www.opengis.net/kml/2.2}coordinates').text.strip()
+                    coords = coordenadas.split()
+                    puntos = [(float(coord.split(',')[1]), float(coord.split(',')[0])) for coord in coords]
+                    placemarks.append({'tipo': 'Polygon', 'nombre': nombre, 'puntos': puntos})
+        elif pt is not None:
+            coordenadas = pt.find('{http://www.opengis.net/kml/2.2}coordinates').text.strip()
+            lon, lat, *_ = coordenadas.split(',')
+            placemarks.append({'tipo': 'Point', 'nombre': nombre, 'lat': float(lat), 'lon': float(lon)})
+        else:
+            coordenadas = mg.find('{http://www.opengis.net/kml/2.2}coordinates').text.strip()
+            lon, lat, *_ = coordenadas.split(',')
+            placemarks.append({'tipo': 'LineString', 'nombre': nombre, 'lat': float(lat), 'lon': float(lon)})    
+    
+    return placemarks
+
+
 
 def procesar_multigeometrias(geoms, layer_name, obtener_elevacion_valor, coords, layers, coords_dec):
     utm_points_total = []
@@ -136,6 +189,7 @@ def procesar_multigeometrias(geoms, layer_name, obtener_elevacion_valor, coords,
     
     return utm_points_total, coords_total, coords_dec_total, layers_total
 
+
 def obtener_maximos_minimos(coords, coords_dec):
         
     # Calcula el promedio de las coordenadas x e y
@@ -161,7 +215,8 @@ def obtener_maximos_minimos(coords, coords_dec):
 def obtener_coordenadas(coord, layer_name,  obtener_elevacion_valor,coords, layers, coords_dec):
                        
     utm_points = []
-    elevaciones_api = []  
+    elevaciones_api = []
+    
     
     if coord is not None:
         points = [c.split(',') for c in coord.text.split()]
@@ -182,6 +237,9 @@ def obtener_coordenadas(coord, layer_name,  obtener_elevacion_valor,coords, laye
                 #print("No se está obteniendo altitud de la API de Google Maps...")
                 utm_points.append((utm_point[0], utm_point[1], 0))
                 coords.append((utm_point[0], utm_point[1], 0))
+    print (layer_name)
+    print(f"utm_points en obtener coordenadas  tiene {len(utm_points)} elementos")
+    print(f"layers tiene en obtener coordenadas tiene  {len(layers)} elementos")            
    
     return utm_points, coords, coords_dec, layers
 
@@ -195,6 +253,7 @@ def obtener_altitud_api(lat, lon):
         return round(datos["results"][0]["elevation"], 2)
     else:
         return 0
+
 
 def agregar_polilinea(utm_points, layer_name, doc):
     """
@@ -220,6 +279,7 @@ def agregar_polilinea(utm_points, layer_name, doc):
     if len(utm_points) == 1:  # Si es un punto
         # Generar un círculo de radio un metro alrededor del punto
         radius = 20  # Radio del círculo en metros
+        print (f'radius = , {radius} metros')
         num_points = 36  # Número de puntos que conforman el círculo
         circle_points = []
         for i in range(num_points):
