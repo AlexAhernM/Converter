@@ -110,43 +110,43 @@ class App(customtkinter.CTk):
 
         #self.protocol("WM_DELETE_WINDOW", self.on_closing)
         
-def download_image(url):
-    response = requests.get(url)
-    if response.status_code == 200:
-        image_data = BytesIO(response.content)
-        return Image.open(image_data)
-    else:
-        print(f"Error al descargar la imagen desde {url}: {response.status_code}")
-        return None
+    def download_image(self, url):
+        response = requests.get(url)
+        if response.status_code == 200:
+            image_data = BytesIO(response.content)
+            return Image.open(image_data)
+        else:
+            print(f"Error al descargar la imagen desde {url}: {response.status_code}")
+            return None
 
-def show_image_in_preview(self):
-    url_image1 = "https://raw.githubusercontent.com/AlexAhernM/Converter/master/earth.png"
-    url_image2 = "https://raw.githubusercontent.com/AlexAhernM/Converter/master/AMBYLOG.png"
+    def show_image_in_preview(self):
+        url_image1 = "https://raw.githubusercontent.com/AlexAhernM/Converter/master/earth.png"
+        url_image2 = "https://raw.githubusercontent.com/AlexAhernM/Converter/master/AMBYLOG.png"
 
-    image1 = download_image(url_image1)
-    image2 = download_image(url_image2)
+        image1 = self.download_image(url_image1)
+        image2 = self.download_image(url_image2)
 
-    if image1 and image2:
-        self.preview_image = customtkinter.CTkImage(light_image=image1, dark_image=image1, size=(900, 530))
-        self.preview_image2 = customtkinter.CTkImage(light_image=image2, dark_image=image2, size=(200, 200))
+        if image1 and image2:
+            self.preview_image = customtkinter.CTkImage(light_image=image1, dark_image=image1, size=(900, 530))
+            self.preview_image2 = customtkinter.CTkImage(light_image=image2, dark_image=image2, size=(200, 200))
 
-        # Crear y mostrar los CTkLabel
-        if not hasattr(self, 'preview_label'):
-            self.preview_label = customtkinter.CTkLabel(self.preview_frame, text="", image=self.preview_image)
-            self.preview_label.grid(row=0, column=0, padx=(320,100), pady=(0,10), sticky='nsew')
+            # Crear y mostrar los CTkLabel
+            if not hasattr(self, 'preview_label'):
+                self.preview_label = customtkinter.CTkLabel(self.preview_frame, text="", image=self.preview_image)
+                self.preview_label.grid(row=0, column=0, padx=(320,100), pady=(0,10), sticky='nsew')
 
-        if not hasattr(self, 'preview_label2'):
-            self.preview_label2 = customtkinter.CTkLabel(self.preview_frame, text="", image=self.preview_image2)
-            self.preview_label2.grid(row=0, column=0, padx=(10,10), pady=(150,10), sticky='ew')
-    else:
-        print("No se pudieron descargar todas las imágenes")
+            if not hasattr(self, 'preview_label2'):
+                self.preview_label2 = customtkinter.CTkLabel(self.preview_frame, text="", image=self.preview_image2)
+                self.preview_label2.grid(row=0, column=0, padx=(10,10), pady=(150,10), sticky='ew')
+        else:
+            print("No se pudieron descargar todas las imágenes")
     
-def destroy_preview_label(self):
-    # Método para destruir el CTkLabel y liberar recursos
-    if self.preview_label:
-        self.preview_label.destroy()
-        self.preview_label = None
-        self.preview_image = None  # Liberar la referencia de la imagen
+    def destroy_preview_label(self):
+        # Método para destruir el CTkLabel y liberar recursos
+        if self.preview_label:
+            self.preview_label.destroy()
+            self.preview_label = None
+            self.preview_image = None  # Liberar la referencia de la imagen
 
 def on_closing(self):
     self.destroy()       

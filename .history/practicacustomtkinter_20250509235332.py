@@ -110,7 +110,7 @@ class App(customtkinter.CTk):
 
         #self.protocol("WM_DELETE_WINDOW", self.on_closing)
         
-def download_image(url):
+def download_image(self, url):
     response = requests.get(url)
     if response.status_code == 200:
         image_data = BytesIO(response.content)
@@ -123,8 +123,8 @@ def show_image_in_preview(self):
     url_image1 = "https://raw.githubusercontent.com/AlexAhernM/Converter/master/earth.png"
     url_image2 = "https://raw.githubusercontent.com/AlexAhernM/Converter/master/AMBYLOG.png"
 
-    image1 = download_image(url_image1)
-    image2 = download_image(url_image2)
+    image1 = self.download_image(url_image1)
+    image2 = self.download_image(url_image2)
 
     if image1 and image2:
         self.preview_image = customtkinter.CTkImage(light_image=image1, dark_image=image1, size=(900, 530))

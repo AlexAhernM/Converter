@@ -15,17 +15,17 @@ from io import BytesIO
 
 
 class CheckboxFrame(customtkinter.CTkFrame):
-    def __init__(self, master, values, enabled=True, width=650, height = 180):
+    def __init__(self, master, values, enabled=True, width=650, height = 160):
         super().__init__(master, width=width, height= height)
-        #self.grid_propagate(False)
+        self.grid_propagate(False)
         self.values = values
         self.checkboxes = []
         
 
         for i, value in enumerate(self.values):
             inputdata = customtkinter.CTkCheckBox(self, text=value)
-            inputdata.grid(row=i, column=0, padx=10, pady= (10, 5), sticky="w")
-            inputdata.configure(border_width = 1, border_color = 'black')
+            inputdata.grid(row=i, column=0, padx=10, pady= (10, 5), sticky="nw")
+            inputdata.configure(border_width = 1, border_color = 'white')
             if not enabled:
                 inputdata.configure(state="disabled")
             self.checkboxes.append(inputdata)
@@ -59,31 +59,30 @@ class App(customtkinter.CTk):
         
         
         # ROW 0 - SELECT FRAME
-        self.selectfile_frame = customtkinter.CTkFrame(self, width=550, height=180, corner_radius=6)
+        self.selectfile_frame = customtkinter.CTkFrame(self, width=650, height=160, corner_radius=6)
         self.selectfile_frame.grid(row=0, column = 0, padx=10, pady=10, sticky='w')
         self.selectfile_frame.grid_propagate(False)
         
         self.selectdata_boton = customtkinter.CTkButton(self.selectfile_frame, text='Select File', command=lambda: select_file(self))
         self.selectdata_boton.grid(row=0, column=0, padx=10, pady=(25,10), sticky = 'w')
         
-        self.selectdata_entry = customtkinter.CTkEntry(self.selectfile_frame, width=320, height=25, corner_radius=6 )
+        self.selectdata_entry = customtkinter.CTkEntry(self.selectfile_frame, width=290, height=25, corner_radius=6 )
         self.selectdata_entry.grid(row =0, column =1, padx=10, pady=(20,10 ), sticky ='w')
         
         self.checkbox_altitude = CheckboxFrame(self.selectfile_frame, values={'Get Altitude'})
-        self.checkbox_altitude.grid(row =1, column = 1, padx=10, pady=1)
+        self.checkbox_altitude.grid(row =1, column = 1, padx=10, pady=5)
         self.checkbox_altitude.configure(fg_color ='transparent')
     
         self.boton_lookmap = customtkinter.CTkButton(self.selectfile_frame, text="Preview", 
                                                      command= lambda: button_preview(self), 
-                                                     width=160, height=25)
+                                                     width=180, height=20)
         self.boton_lookmap.configure(state= tk.DISABLED)
-        self.boton_lookmap.grid(row=2, column=1, padx=20, pady=(35,0))
+        self.boton_lookmap.grid(row=2, column=1, padx=10, pady=10, sticky='we')
         
         
-        # FRAME: ROW 0 - CHECKBOXES AND RESULT FORMAT
-        self.checkbox_type = CheckboxFrame(self ,values=['DXF (CAD)', 'Shapefile', 'xlxs (Excel)'], enabled=False, width=650, height=180)
-        self.checkbox_type.grid(row=0, column=2, padx= 10, pady =5, sticky='we')
-        self.checkbox_type.grid_propagate(False)
+        # FRAME: ROW 0 - SELECT AND RESULT FORMAT (Chexboxes, Bottons and Labels)
+        self.checkbox_type = CheckboxFrame(self ,values=['DXF (CAD)', 'Shapefile', 'xlxs (Excel)'], enabled=False)
+        self.checkbox_type.grid(row=0, column=2, padx= 10, pady =5, sticky='e')
         
         self.boton_generate_files = customtkinter.CTkButton(self.checkbox_type, text='generate files')
         self.boton_generate_files.grid(row=4, column=0, padx=10, pady=10, sticky='ew')
@@ -92,13 +91,13 @@ class App(customtkinter.CTk):
         
         # FRAME: ROW 1 - APPROVAL
         self.approval_frame = customtkinter.CTkFrame(self, height=40)
-        self.approval_frame.grid(row=1 ,column =0, padx=10,pady =5,sticky='we', columnspan=3)
+        self.approval_frame.grid(row=1 ,column =0, padx=10,pady =10,sticky='we', columnspan=3)
         #self.approval_frame.grid_propagate(False)
         
         # FRAME: ROW 2 - MAP PREVIEW
         # Creación del frame de vista previa
-        self.preview_frame = customtkinter.CTkFrame(self, height=500, width=500, fg_color='#0C101C')
-        self.preview_frame.grid(row=2, column=0, padx=10, pady=5, columnspan=3, sticky='nsew')
+        self.preview_frame = customtkinter.CTkFrame(self, height=500, width=500)
+        self.preview_frame.grid(row=2, column=0, padx=10, pady=10, columnspan=3, sticky='nsew')
         
         
         # Inicializar atributos del label y la imagen
@@ -110,36 +109,27 @@ class App(customtkinter.CTk):
 
         #self.protocol("WM_DELETE_WINDOW", self.on_closing)
         
-def download_image(url):
-    response = requests.get(url)
-    if response.status_code == 200:
-        image_data = BytesIO(response.content)
-        return Image.open(image_data)
-    else:
-        print(f"Error al descargar la imagen desde {url}: {response.status_code}")
-        return None
-
 def show_image_in_preview(self):
-    url_image1 = "https://raw.githubusercontent.com/AlexAhernM/Converter/master/earth.png"
-    url_image2 = "https://raw.githubusercontent.com/AlexAhernM/Converter/master/AMBYLOG.png"
-
-    image1 = download_image(url_image1)
-    image2 = download_image(url_image2)
-
-    if image1 and image2:
-        self.preview_image = customtkinter.CTkImage(light_image=image1, dark_image=image1, size=(900, 530))
-        self.preview_image2 = customtkinter.CTkImage(light_image=image2, dark_image=image2, size=(200, 200))
-
-        # Crear y mostrar los CTkLabel
-        if not hasattr(self, 'preview_label'):
-            self.preview_label = customtkinter.CTkLabel(self.preview_frame, text="", image=self.preview_image)
-            self.preview_label.grid(row=0, column=0, padx=(320,100), pady=(0,10), sticky='nsew')
-
-        if not hasattr(self, 'preview_label2'):
-            self.preview_label2 = customtkinter.CTkLabel(self.preview_frame, text="", image=self.preview_image2)
-            self.preview_label2.grid(row=0, column=0, padx=(10,10), pady=(150,10), sticky='ew')
+        
+    url_image = "https://raw.githubusercontent.com/AlexAhernM/Converter/master/earth.png"
+        
+    # Descargar la imagen desde la URL
+    response = requests.get(url_image)
+    if response.status_code == 200:
+        # Cargar la imagen en PIL
+        image_data = BytesIO(response.content)
+        image = Image.open(image_data)
     else:
-        print("No se pudieron descargar todas las imágenes")
+        print(f"Error al descargar la imagen: {response.status_code}")
+        return
+        
+    # Convertir la imagen para CTkLabel
+    self.preview_image = customtkinter.CTkImage(light_image=image, dark_image=image, size=(1600, 700))  # Ajusta el tamaño aquí
+    
+    # Crear y mostrar el CTkLabel (si no existe)
+    if not self.preview_label:
+        self.preview_label = customtkinter.CTkLabel(self.preview_frame, text="", image=self.preview_image)
+        self.preview_label.grid(row=0, column=0, padx=10, pady=10, sticky='nsew')
     
 def destroy_preview_label(self):
     # Método para destruir el CTkLabel y liberar recursos
@@ -157,9 +147,9 @@ def select_file(self):
     self.selectdata_entry.insert(customtkinter.END, ruta_archivo_kml)
     self.boton_lookmap.configure(state='normal')
     self.checkbox_type.disable_checkboxes()
-    
-    
-            
+    for widget in self.preview_frame.winfo_children():            
+        widget.destroy()
+        
     try:
         self.save_dxf.destroy()
     except AttributeError:
@@ -182,7 +172,7 @@ def update_preview(self, lat_centro, lon_centro, zoom_start, root, altitud_value
     for widget in self.preview_frame.winfo_children():            
         widget.destroy()
     
-    #self.destroy_preview_label()  # Destruir el CTkLabel de la imagen
+    self.destroy_preview_label()  # Destruir el CTkLabel de la imagen
     
     
     self.mapa_tkinter = TkinterMapView(self.preview_frame)

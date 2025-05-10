@@ -55,8 +55,8 @@ class App(customtkinter.CTk):
         self.title("Geo Convert Program by Ambylog")
         self.after(0, lambda:app.state('zoomed'))
         self.grid_columnconfigure(0, weight=1)
-        self.grid_rowconfigure(2, weight=1)
         
+    
         
         # ROW 0 - SELECT FRAME
         self.selectfile_frame = customtkinter.CTkFrame(self, width=550, height=180, corner_radius=6)
@@ -97,7 +97,7 @@ class App(customtkinter.CTk):
         
         # FRAME: ROW 2 - MAP PREVIEW
         # Creación del frame de vista previa
-        self.preview_frame = customtkinter.CTkFrame(self, height=500, width=500, fg_color='#0C101C')
+        self.preview_frame = customtkinter.CTkFrame(self, height=500, width=500)
         self.preview_frame.grid(row=2, column=0, padx=10, pady=5, columnspan=3, sticky='nsew')
         
         
@@ -110,36 +110,27 @@ class App(customtkinter.CTk):
 
         #self.protocol("WM_DELETE_WINDOW", self.on_closing)
         
-def download_image(url):
-    response = requests.get(url)
-    if response.status_code == 200:
-        image_data = BytesIO(response.content)
-        return Image.open(image_data)
-    else:
-        print(f"Error al descargar la imagen desde {url}: {response.status_code}")
-        return None
-
 def show_image_in_preview(self):
-    url_image1 = "https://raw.githubusercontent.com/AlexAhernM/Converter/master/earth.png"
-    url_image2 = "https://raw.githubusercontent.com/AlexAhernM/Converter/master/AMBYLOG.png"
-
-    image1 = download_image(url_image1)
-    image2 = download_image(url_image2)
-
-    if image1 and image2:
-        self.preview_image = customtkinter.CTkImage(light_image=image1, dark_image=image1, size=(900, 530))
-        self.preview_image2 = customtkinter.CTkImage(light_image=image2, dark_image=image2, size=(200, 200))
-
-        # Crear y mostrar los CTkLabel
-        if not hasattr(self, 'preview_label'):
-            self.preview_label = customtkinter.CTkLabel(self.preview_frame, text="", image=self.preview_image)
-            self.preview_label.grid(row=0, column=0, padx=(320,100), pady=(0,10), sticky='nsew')
-
-        if not hasattr(self, 'preview_label2'):
-            self.preview_label2 = customtkinter.CTkLabel(self.preview_frame, text="", image=self.preview_image2)
-            self.preview_label2.grid(row=0, column=0, padx=(10,10), pady=(150,10), sticky='ew')
+        
+    url_image = "https://raw.githubusercontent.com/AlexAhernM/Converter/master/earth.png"
+        
+    # Descargar la imagen desde la URL
+    response = requests.get(url_image)
+    if response.status_code == 200:
+        # Cargar la imagen en PIL
+        image_data = BytesIO(response.content)
+        image = Image.open(image_data)
     else:
-        print("No se pudieron descargar todas las imágenes")
+        print(f"Error al descargar la imagen: {response.status_code}")
+        return
+        
+    # Convertir la imagen para CTkLabel
+    self.preview_image = customtkinter.CTkImage(light_image=image, dark_image=image, size=(1600, 700))  # Ajusta el tamaño aquí
+    
+    # Crear y mostrar el CTkLabel (si no existe)
+    if not self.preview_label:
+        self.preview_label = customtkinter.CTkLabel(self.preview_frame, text="", image=self.preview_image)
+        self.preview_label.grid(row=0, column=0, padx=10, pady=10, sticky='nsew')
     
 def destroy_preview_label(self):
     # Método para destruir el CTkLabel y liberar recursos
@@ -157,9 +148,9 @@ def select_file(self):
     self.selectdata_entry.insert(customtkinter.END, ruta_archivo_kml)
     self.boton_lookmap.configure(state='normal')
     self.checkbox_type.disable_checkboxes()
-    
-    
-            
+    for widget in self.preview_frame.winfo_children():            
+        widget.destroy()
+        
     try:
         self.save_dxf.destroy()
     except AttributeError:
@@ -182,7 +173,7 @@ def update_preview(self, lat_centro, lon_centro, zoom_start, root, altitud_value
     for widget in self.preview_frame.winfo_children():            
         widget.destroy()
     
-    #self.destroy_preview_label()  # Destruir el CTkLabel de la imagen
+    self.destroy_preview_label()  # Destruir el CTkLabel de la imagen
     
     
     self.mapa_tkinter = TkinterMapView(self.preview_frame)
