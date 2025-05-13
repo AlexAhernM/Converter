@@ -91,7 +91,7 @@ class App(customtkinter.CTk):
         # FRAME: ROW 2 - MAP PREVIEW
         # Creación del frame de vista previa
         self.preview_frame = customtkinter.CTkFrame(self, height=500, width=500, fg_color='#0C101C')
-        self.preview_frame.grid(row=2, column=0, padx=10, pady=5, columnspan=4, sticky='nsew')
+        self.preview_frame.grid(row=2, column=0, padx=10, pady=5, columnspan=3, sticky='nsew')
         self.preview_frame.grid_columnconfigure(1, weight=1)
         
         # Inicializar atributos del label 

@@ -55,8 +55,8 @@ class App(customtkinter.CTk):
         self.grid_columnconfigure(0, weight=1)
         self.grid_rowconfigure(2, weight=1)
                 
-        # FRAME: ROW 0 - SELECT FILE
-        self.selectfile_frame = customtkinter.CTkFrame(self, width=550, height=180, corner_radius=6, fg_color='white')
+        # ROW 0 - SELECT FRAME
+        self.selectfile_frame = customtkinter.CTkFrame(self, width=550, height=180, corner_radius=6, fg_color='gray86')
         self.selectfile_frame.grid(row=0, column = 0, padx=10, pady=10, sticky='w')
         self.selectfile_frame.grid_propagate(False)
         
@@ -78,20 +78,19 @@ class App(customtkinter.CTk):
         self.boton_convert_files = customtkinter.CTkButton(self.intermedio_frame, text='Convert File', command=lambda: generate_conv(self))
         self.boton_convert_files.grid(row=2, column=0, padx=(65,0), pady=(44,0), sticky='w')
         
-        # FRAME: ROW 0 -  CHECKBOXS Y MESSAGES
         
-        self.checkbox_frame = customtkinter.CTkFrame(self, width=650, height=180)
-        self.checkbox_frame.grid(row=0, column=3, padx =10, pady=10, sticky = 'nsew' )
+        
+        
         
         # FRAME: ROW 1 - APPROVAL
         self.approval_frame = customtkinter.CTkFrame(self, height=40)
-        self.approval_frame.grid(row=1 ,column =0, padx=10,pady =5,sticky='we', columnspan=4)
+        self.approval_frame.grid(row=1 ,column =0, padx=10,pady =5,sticky='we', columnspan=3)
         #self.approval_frame.grid_propagate(False)
         
         # FRAME: ROW 2 - MAP PREVIEW
         # Creación del frame de vista previa
         self.preview_frame = customtkinter.CTkFrame(self, height=500, width=500, fg_color='#0C101C')
-        self.preview_frame.grid(row=2, column=0, padx=10, pady=5, columnspan=4, sticky='nsew')
+        self.preview_frame.grid(row=2, column=0, padx=10, pady=5, columnspan=3, sticky='nsew')
         self.preview_frame.grid_columnconfigure(1, weight=1)
         
         # Inicializar atributos del label 
@@ -100,23 +99,19 @@ class App(customtkinter.CTk):
         
          # Cargar y mostrar la imagen en el frame de vista previa
         self.show_image_in_preview() 
-        self.show_image_in_labels()
 
     def deseleccionar(self):
         self.rbuttomkml.configure(state='disabled')
         self.rbuttomcord.configure(state='disabled') 
         self.tipo_geo.set("")
         
-    def habilitar (self):
-        self.rbuttomkml.configure(state='normal')
-        self.rbuttomcord.configure(state='normal')  
 
     def show_image_in_preview(self):
        
         
         images_config = [
             {"url": "https://raw.githubusercontent.com/AlexAhernM/Converter/master/earth.png", "size": (1260, 530)},
-            {"url": "https://raw.githubusercontent.com/AlexAhernM/Converter/master/googlearth.png", "size": (300, 180)},
+            {"url": "https://raw.githubusercontent.com/AlexAhernM/Converter/master/earthcity.png", "size": (380, 180)},
             {"url": "https://raw.githubusercontent.com/AlexAhernM/Converter/master/osm.png", "size": (520, 180)}
         ]
         
@@ -135,22 +130,14 @@ class App(customtkinter.CTk):
         # Crear y mostrar el CTkLabel (si no existe)
         
         self.preview_label1 = customtkinter.CTkLabel(self.preview_frame, text="", image=self.preview_images[0])
-        self.preview_label1.pack(expand = True, fill ='both')
+        self.preview_label1.grid(row=0, column=0, padx=(60, 100), pady=(0, 10), sticky='nsew')
         
-    def show_image_in_labels(self):
         self.preview_label2 = customtkinter.CTkLabel(self.selectfile_frame, text="", image=self.preview_images[1])
-        self.preview_label2.grid(row=0, column=0, padx=120, pady=2, sticky='nsew')
+        self.preview_label2.grid(row=0, column=0, padx=80, pady=10, sticky='nsew')
 
         return 
 
 def generate_conv(self):
-    for widget in self.selectfile_frame.winfo_children():            
-        widget.destroy()
-    
-    for widget in self.preview_frame.winfo_children():            
-        widget.destroy()
-    self.show_image_in_preview()
-    
     self.selectdata_boton = customtkinter.CTkButton(self.selectfile_frame, text='Select File', command=lambda: select_file(self))
     self.selectdata_boton.grid(row=0, column=0, padx=10, pady=(25,10), sticky = 'w')
         
@@ -197,16 +184,17 @@ def select_file(self):
         ruta_archivo_excel = filedialog.askopenfilename(title="Seleccionar archivo Excel", filetypes=[("Archivo Excel", "*.xlsx")])
         self.selectdata_entry.delete(0, customtkinter.END)
         self.selectdata_entry.insert(customtkinter.END, ruta_archivo_excel)
+    self.boton_lookmap.configure(state='normal')
+    self.checkbox_type.disable_checkboxes()
     
-    
-    
+    if self.mapa_tkinter:
+        self.mapa_tkinter.destroy()
     
     for widget in self.approval_frame.winfo_children():            
         widget.destroy()
-    
+    self.show_image_in_preview()
     self.deseleccionar()
     self.boton_convert_files.configure(state= tk.DISABLED)
-    self.boton_lookmap.configure(state ='normal')
 
 
             
@@ -232,9 +220,11 @@ def update_preview(self, lat_centro, lon_centro, zoom_start, root, altitud_value
     for widget in self.preview_frame.winfo_children():            
         widget.destroy()
     
-    self.mapa_tkinter = TkinterMapView(self.preview_frame)
+    #self.destroy_preview_label()  # Destruir el CTkLabel de la imagen
     
-    self.mapa_tkinter.pack(expand=True, fill='both')
+    
+    self.mapa_tkinter = TkinterMapView(self.preview_frame)
+    self.mapa_tkinter.grid(row=0, column=0, padx=10, pady=10, sticky='nsew')
     self.mapa_tkinter.set_position(lat_centro, lon_centro)
     self.mapa_tkinter.set_zoom(zoom_start)
 
@@ -253,7 +243,7 @@ def update_preview(self, lat_centro, lon_centro, zoom_start, root, altitud_value
     self.label_mappreview = customtkinter.CTkLabel(self.approval_frame, text='Vision Preliminar Area Geografica a Procesar', 
                                                        fg_color='gray69', text_color='Blue' , width = 290, height=25, corner_radius=6)
     self.label_mappreview.grid(row=0, column =0, padx= (400), pady= (5))        
-    
+    self.mapa_tkinter.pack(fill="both", expand=True)
     
 
 def button_preview(self):
@@ -349,10 +339,6 @@ def show_messages(self, messages):
         if ruta_xlx:
             self.save_xlx.configure(command=lambda ruta=ruta_xlx: abrir_archivo(ruta))
             self.save_xlx.grid(row=2, column=1, padx=5, pady=5, sticky='w')
-            
-    self.boton_convert_files.configure(state = 'normal')
-    self.habilitar ()                                 
-    self.selectdata_boton.configure(state = 'disabled')
 
 def abrir_archivo(ruta):
     try:
