@@ -9,9 +9,8 @@ from genera import generate_files_intermediate
 import os
 import re
 import requests
-from PIL import Image, ImageTk
+from PIL import Image
 from io import BytesIO
-
 
 
 class CheckboxFrame(customtkinter.CTkFrame):
@@ -49,45 +48,38 @@ class CheckboxFrame(customtkinter.CTkFrame):
         
 
 class App(customtkinter.CTk):
-    imagen_tk = None
     def __init__(self):
         super().__init__()
         self.title("Geo Convert Program by Ambylog")
         self.after(0, lambda:app.state('zoomed'))
         self.grid_columnconfigure(0, weight=1)
         self.grid_rowconfigure(2, weight=1)
-        
-        
+                
         # ROW 0 - SELECT FRAME
-        self.selectfile_frame = customtkinter.CTkFrame(self, width=550, height=180, corner_radius=6)
+        self.selectfile_frame = customtkinter.CTkFrame(self, width=550, height=180, corner_radius=6, fg_color='blue')
         self.selectfile_frame.grid(row=0, column = 0, padx=10, pady=10, sticky='w')
         self.selectfile_frame.grid_propagate(False)
         
-        self.selectdata_boton = customtkinter.CTkButton(self.selectfile_frame, text='Select File', command=lambda: select_file(self))
-        self.selectdata_boton.grid(row=0, column=0, padx=10, pady=(25,10), sticky = 'w')
         
-        self.selectdata_entry = customtkinter.CTkEntry(self.selectfile_frame, width=320, height=25, corner_radius=6 )
-        self.selectdata_entry.grid(row =0, column =1, padx=10, pady=(20,10 ), sticky ='w')
+        # FRAME: ROW 0 - INTERMEDIO RADIOBUTTOMS - TIPO DE FORMATO A TRANSFORMAR
+        self.intermedio_frame = customtkinter.CTkFrame(self, width=280, height=180)
+        self.intermedio_frame.grid(row=0, column = 1, padx=10, pady=10, sticky='e')
+        self.intermedio_frame.grid_propagate(False)
         
-        self.checkbox_altitude = CheckboxFrame(self.selectfile_frame, values={'Get Altitude'})
-        self.checkbox_altitude.grid(row =1, column = 1, padx=10, pady=1)
-        self.checkbox_altitude.configure(fg_color ='transparent')
-    
-        self.boton_lookmap = customtkinter.CTkButton(self.selectfile_frame, text="Preview", 
-                                                     command= lambda: button_preview(self), 
-                                                     width=160, height=25)
-        self.boton_lookmap.configure(state= tk.DISABLED)
-        self.boton_lookmap.grid(row=2, column=1, padx=20, pady=(35,0))
+        self.tipo_geo = customtkinter.StringVar()
         
         
-        # FRAME: ROW 0 - CHECKBOXES AND RESULT FORMAT
-        self.checkbox_type = CheckboxFrame(self ,values=['DXF (CAD)', 'Shapefile', 'xlxs (Excel)'], enabled=False, width=650, height=180)
-        self.checkbox_type.grid(row=0, column=2, padx= 10, pady =5, sticky='we')
-        self.checkbox_type.grid_propagate(False)
+        self.rbuttomkml = customtkinter.CTkRadioButton(self.intermedio_frame, text=" From KML", variable=self.tipo_geo, value="KML")
+        self.rbuttomkml.grid(row=0, column=0, padx=10, pady=(20,10),  sticky='w')
         
-        self.boton_generate_files = customtkinter.CTkButton(self.checkbox_type, text='generate files')
-        self.boton_generate_files.grid(row=4, column=0, padx=10, pady=10, sticky='ew')
-        self.boton_generate_files.configure(state= 'disabled')
+        self.rbuttomcord = customtkinter.CTkRadioButton(self.intermedio_frame, text="From Coords", variable=self.tipo_geo, value="Coordenadas")
+        self.rbuttomcord.grid(row=1, column=0, padx=10, pady=10, sticky='w')
+        
+        self.boton_convert_files = customtkinter.CTkButton(self.intermedio_frame, text='Convert File', command=lambda: generate_conv(self))
+        self.boton_convert_files.grid(row=2, column=0, padx=(65,0), pady=(44,0), sticky='w')
+        
+        
+        
         
         
         # FRAME: ROW 1 - APPROVAL
@@ -99,66 +91,104 @@ class App(customtkinter.CTk):
         # Creación del frame de vista previa
         self.preview_frame = customtkinter.CTkFrame(self, height=500, width=500, fg_color='#0C101C')
         self.preview_frame.grid(row=2, column=0, padx=10, pady=5, columnspan=3, sticky='nsew')
+        self.preview_frame.grid_columnconfigure(1, weight=1)
         
+        # Inicializar atributos del label 
+        #self.preview_label = None
         
-        # Inicializar atributos del label y la imagen
-        self.preview_label = None
-        self.preview_image = None
         
          # Cargar y mostrar la imagen en el frame de vista previa
-        show_image_in_preview(self)
+        self.show_image_in_preview() 
 
-        #self.protocol("WM_DELETE_WINDOW", self.on_closing)
+    def deseleccionar(self):
+        self.rbuttomkml.configure(state='disabled')
+        self.rbuttomcord.configure(state='disabled') 
+        self.tipo_geo.set("")
         
-def download_image(url):
-    response = requests.get(url)
-    if response.status_code == 200:
-        image_data = BytesIO(response.content)
-        return Image.open(image_data)
-    else:
-        print(f"Error al descargar la imagen desde {url}: {response.status_code}")
-        return None
 
-def show_image_in_preview(self):
-    url_image1 = "https://raw.githubusercontent.com/AlexAhernM/Converter/master/earth.png"
-    url_image2 = "https://raw.githubusercontent.com/AlexAhernM/Converter/master/AMBYLOG.png"
+    def show_image_in_preview(self):
+        url_image = "https://raw.githubusercontent.com/AlexAhernM/Converter/master/earth.png"
+        
+        # Descargar la imagen desde la URL
+        response = requests.get(url_image)
+        if response.status_code == 200:
+            # Cargar la imagen en PIL
+            image_data = BytesIO(response.content)
+            image = Image.open(image_data)
+        else:
+            print(f"Error al descargar la imagen: {response.status_code}")
+            return 
+        
+        # Convertir la imagen para CTkLabel
+        self.preview_image = customtkinter.CTkImage(light_image=image, dark_image=image, size=(1260, 530))  # Ajusta el tamaño aquí
 
-    image1 = download_image(url_image1)
-    image2 = download_image(url_image2)
+        # Crear y mostrar el CTkLabel (si no existe)
+        
+        self.preview_label = customtkinter.CTkLabel(self.preview_frame, text="", image=self.preview_image)
+        self.preview_label.grid(row=0, column=0, padx=(60, 100), pady=(0, 10), sticky='nsew')
 
-    if image1 and image2:
-        self.preview_image = customtkinter.CTkImage(light_image=image1, dark_image=image1, size=(900, 530))
-        self.preview_image2 = customtkinter.CTkImage(light_image=image2, dark_image=image2, size=(200, 200))
+        return 
 
-        # Crear y mostrar los CTkLabel
-        if not hasattr(self, 'preview_label'):
-            self.preview_label = customtkinter.CTkLabel(self.preview_frame, text="", image=self.preview_image)
-            self.preview_label.grid(row=0, column=0, padx=(320,100), pady=(0,10), sticky='nsew')
-
-        if not hasattr(self, 'preview_label2'):
-            self.preview_label2 = customtkinter.CTkLabel(self.preview_frame, text="", image=self.preview_image2)
-            self.preview_label2.grid(row=0, column=0, padx=(10,10), pady=(150,10), sticky='ew')
-    else:
-        print("No se pudieron descargar todas las imágenes")
+def generate_conv(self):
+    self.selectdata_boton = customtkinter.CTkButton(self.selectfile_frame, text='Select File', command=lambda: select_file(self))
+    self.selectdata_boton.grid(row=0, column=0, padx=10, pady=(25,10), sticky = 'w')
+        
+    self.selectdata_entry = customtkinter.CTkEntry(self.selectfile_frame, width=320, height=25, corner_radius=6 )
+    self.selectdata_entry.grid(row =0, column =1, padx=10, pady=(20,10 ), sticky ='w')
     
-def destroy_preview_label(self):
-    # Método para destruir el CTkLabel y liberar recursos
-    if self.preview_label:
-        self.preview_label.destroy()
-        self.preview_label = None
-        self.preview_image = None  # Liberar la referencia de la imagen
-
-def on_closing(self):
-    self.destroy()       
+    self.boton_lookmap = customtkinter.CTkButton(self.selectfile_frame, text="Preview", 
+                                                     command= lambda: button_preview(self), 
+                                                     width=160, height=25)
+    self.boton_lookmap.configure(state= tk.DISABLED)
+    self.boton_lookmap.grid(row=2, column=1, padx=20, pady=(35,0))
+    
+    if self.tipo_geo.get() == "KML":
         
+        self.checkbox_altitude = CheckboxFrame(self.selectfile_frame, values={'Get Altitude'})
+        self.checkbox_altitude.grid(row =1, column = 1, padx=10, pady=1)
+        self.checkbox_altitude.configure(fg_color ='transparent')
+        
+        # FRAME: ROW 0 - CHECKBOXES AND RESULT FORMAT
+        self.checkbox_type = CheckboxFrame(self ,values=['DXF (CAD)', 'Shapefile', 'xlxs (Excel)'], enabled=False, width=650, height=180)
+        self.checkbox_type.grid(row=0, column=2, padx= 10, pady =5, sticky='w')
+        self.checkbox_type.grid_propagate(False)
+        
+        self.boton_generate_files = customtkinter.CTkButton(self.checkbox_type, text='Generate Files')
+        self.boton_generate_files.grid(row=4, column=0, padx=10, pady=(20,0), sticky='ew')
+        self.boton_generate_files.configure(state= 'disabled')
+        
+        self.selectfile_frame.configure(fg_color="gray84")
+        
+    elif self.tipo_geo.get() == "Coordenadas":
+        if self.checkbox_altitude:
+            self.checkbox_altitude.destroy()
+        
+
+    return
+         
 def select_file(self):
-    ruta_archivo_kml = filedialog.askopenfilename(title="Seleccionar archivo KML", filetypes=[("Archivo KML", "*.kml")])
-    self.selectdata_entry.delete(0, customtkinter.END)
-    self.selectdata_entry.insert(customtkinter.END, ruta_archivo_kml)
+    self.mapa_tkinter = None
+    if self.tipo_geo.get() == "KML":
+        ruta_archivo_kml = filedialog.askopenfilename(title="Seleccionar archivo KML", filetypes=[("Archivo KML", "*.kml")])
+        self.selectdata_entry.delete(0, customtkinter.END)
+        self.selectdata_entry.insert(customtkinter.END, ruta_archivo_kml)
+    else:
+        ruta_archivo_excel = filedialog.askopenfilename(title="Seleccionar archivo Excel", filetypes=[("Archivo Excel", "*.xlsx")])
+        self.selectdata_entry.delete(0, customtkinter.END)
+        self.selectdata_entry.insert(customtkinter.END, ruta_archivo_excel)
     self.boton_lookmap.configure(state='normal')
     self.checkbox_type.disable_checkboxes()
     
+    if self.mapa_tkinter:
+        self.mapa_tkinter.destroy()
     
+    for widget in self.approval_frame.winfo_children():            
+        widget.destroy()
+    self.show_image_in_preview()
+    self.deseleccionar()
+    self.boton_convert_files.configure(state= tk.DISABLED)
+
+
             
     try:
         self.save_dxf.destroy()
@@ -229,10 +259,14 @@ def confirmar_localizacion(self, doc, ruta_archivo_kml, coords, layers, coords_d
     def respuesta_confirmacion(respuesta):
         if respuesta == "incorrecta":
             self.boton_lookmap.configure(state='disabled')
+            self.boton_looks_good.configure(state='disabled')
+            self.boton_no_good.configure(state='disabled')
             # Vuelve a seleccionar otro archivo KML
             select_file(self)
         elif respuesta == "correcta":
             self.checkbox_type.enable_checkboxes()
+            self.boton_looks_good.configure(state='disabled')
+            self.boton_no_good.configure(state='disabled')
             generate_files(self, doc, ruta_archivo_kml, coords, layers, coords_dec) or ("", "", "")
                  
     self.boton_looks_good = customtkinter.CTkButton(self.approval_frame, text="Looks good", command=lambda: respuesta_confirmacion("correcta"),

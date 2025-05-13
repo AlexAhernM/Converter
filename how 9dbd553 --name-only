@@ -1,0 +1,60 @@
+[33mcommit 99ef91e79280ac3a663a619f45b4da2d193f6117[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmaster[m[33m, [m[1;31morigin/master[m[33m)[m
+Merge: 9dbd553 4d163a8
+Author: Alex Ahern <alex_ahern@hotmail.com>
+Date:   Sat May 10 00:18:18 2025 -0400
+
+    agrega logo
+
+[33mcommit 9dbd553a1f80a87d758efc670f514dd77b5a98a7[m
+Author: Alex Ahern <alex_ahern@hotmail.com>
+Date:   Sat May 10 00:08:51 2025 -0400
+
+    logo
+
+[33mcommit 4d163a86b78dec5ef29a8f3b8cfd6b7d539b7fc8[m
+Author: AlexAhernM <alex_ahern@hotmail.com>
+Date:   Fri May 9 23:58:40 2025 -0400
+
+    add logo ambylog
+
+[33mcommit b9382f261d96d96b099270ff935de73421715c28[m
+Author: Alex Ahern <alex_ahern@hotmail.com>
+Date:   Mon May 5 21:56:08 2025 -0400
+
+    modificado con customer tkinter
+
+[33mcommit a63c0be0b893a90f61dfe6c2e53ed90eb8daa64f[m
+Author: Alex Ahern <alex_ahern@hotmail.com>
+Date:   Thu Apr 17 00:50:45 2025 -0400
+
+    Factorizar funciones y script genera
+
+[33mcommit b436fc3553f90feb415734293b547410908bfc36[m
+Author: Alex Ahern <alex_ahern@hotmail.com>
+Date:   Wed Apr 16 21:56:08 2025 -0400
+
+    afinar mapa en ventana - falta factorizar codigo
+
+[33mcommit 90523efdc297e9332cd370389dd8101f29f42680[m
+Author: Alex Ahern <alex_ahern@hotmail.com>
+Date:   Wed Apr 16 18:01:51 2025 -0400
+
+    agrega capas a OSM
+
+[33mcommit 4e56d8329af494b12438c646e93cd96aa490e34c[m
+Author: Alex Ahern <alex_ahern@hotmail.com>
+Date:   Wed Apr 16 10:00:49 2025 -0400
+
+    Actualizacion 16 abril am
+
+[33mcommit f7e2152221492d66d1dadf94728dfeafcbd79ea9[m
+Author: Alex Ahern <alex_ahern@hotmail.com>
+Date:   Fri Apr 11 20:29:15 2025 -0400
+
+    modificacion 1
+
+[33mcommit c818bbb89942bcb46f7a2ba7c42052f1c2948a82[m
+Author: Alex Ahern <alex_ahern@hotmail.com>
+Date:   Fri Apr 11 16:41:46 2025 -0400
+
+    Actualiza
