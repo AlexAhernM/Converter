@@ -117,7 +117,7 @@ class App(customtkinter.CTk):
         images_config = [
             {"url": "https://raw.githubusercontent.com/AlexAhernM/Converter/master/earth1.png", "size": (1360, 510)},
             {"url": "https://raw.githubusercontent.com/AlexAhernM/Converter/master/Atardecer_anf.png", "size": (300, 180)},
-            {"url": "https://raw.githubusercontent.com/AlexAhernM/Converter/master/amanecer.png", "size": (300, 180)}
+            {"url": "https://raw.githubusercontent.com/AlexAhernM/Converter/master/amanecer.png", "size": (420, 180)}
         ]
         
          # Descargar las imágenes y crear CTkImage

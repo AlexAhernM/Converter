@@ -90,7 +90,7 @@ class App(customtkinter.CTk):
         
         # FRAME: ROW 2 - MAP PREVIEW
         # Creación del frame de vista previa
-        self.preview_frame = customtkinter.CTkFrame(self, height=500, width=500, fg_color='white')
+        self.preview_frame = customtkinter.CTkFrame(self, height=500, width=500, fg_color='#0C101C')
         self.preview_frame.grid(row=2, column=0, padx=10, pady=5, columnspan=4, sticky='nsew')
         self.preview_frame.grid_columnconfigure(1, weight=1)
         
@@ -115,9 +115,9 @@ class App(customtkinter.CTk):
        
         #Atardecer_anf.png amanecer.png
         images_config = [
-            {"url": "https://raw.githubusercontent.com/AlexAhernM/Converter/master/earth1.png", "size": (1360, 510)},
+            {"url": "https://raw.githubusercontent.com/AlexAhernM/Converter/master/earth1.png", "size": (1260, 530)},
             {"url": "https://raw.githubusercontent.com/AlexAhernM/Converter/master/Atardecer_anf.png", "size": (300, 180)},
-            {"url": "https://raw.githubusercontent.com/AlexAhernM/Converter/master/amanecer.png", "size": (300, 180)}
+            {"url": "https://raw.githubusercontent.com/AlexAhernM/Converter/master/amanecer.png", "size": (520, 180)}
         ]
         
          # Descargar las imágenes y crear CTkImage
